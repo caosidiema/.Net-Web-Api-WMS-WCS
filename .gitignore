@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.vspscc
+*.vssscc
+*.pidb
+*.log
+*.vscode/
+
+## Logs
+logs/
+
+## Node.js
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+## IDE
+.idea/
+*.swp
+*.swo
+*~
+
+## OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+## Secrets
+appsettings.Production.json
+*.env.local
