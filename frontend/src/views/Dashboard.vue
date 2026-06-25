@@ -1,13 +1,13 @@
 <template>
-  <div class="home-container">
+  <div>
     <!-- 欢迎区域 -->
     <div class="welcome-section">
       <div class="welcome-text">
         <h1>欢迎回来，{{ authStore.userName || '管理员' }} 👋</h1>
-        <p>这里是您的仓储运营概览</p>
+        <p>今天是 {{ currentDate }}，这是你的仓储运营概览。</p>
       </div>
       <div class="welcome-actions">
-        <el-button type="primary" @click="fetchData" :loading="loading">
+        <el-button type="primary" @click="fetchProfile" :loading="loading">
           <el-icon><Refresh /></el-icon>
           刷新数据
         </el-button>
@@ -33,7 +33,6 @@
 
     <!-- 图表与活动区域 -->
     <div class="dashboard-grid">
-      <!-- 库存概览 -->
       <div class="dashboard-card chart-card">
         <div class="card-header">
           <h3>库存概览</h3>
@@ -52,7 +51,6 @@
         </div>
       </div>
 
-      <!-- 最近活动 -->
       <div class="dashboard-card activity-card">
         <div class="card-header">
           <h3>最近活动</h3>
@@ -77,7 +75,7 @@
           <h3>快捷操作</h3>
         </div>
         <div class="quick-actions">
-          <div class="action-btn" v-for="action in quickActions" :key="action.label" @click="handleAction(action.path)">
+          <div class="action-btn" v-for="action in quickActions" :key="action.label">
             <div class="action-icon" :style="{ background: action.color }">
               <el-icon :size="20"><component :is="action.icon" /></el-icon>
             </div>
@@ -105,25 +103,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
-  Refresh, Top, Bottom, Plus, Download, Upload, Search,
-  Box, ShoppingCart, Van, Odometer
+  Top, Bottom, Plus, Download, Upload, Search, Refresh
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
+import { getProfile } from '../api/auth'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const chartPeriod = ref('week')
 
+const currentDate = computed(() => {
+  const now = new Date()
+  const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
+  return now.toLocaleDateString('zh-CN', options)
+})
+
 const statsCards = ref([
-  { title: '总库存量', value: '12,846', icon: Box, color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', trend: '+12.5%', trendType: 'up' },
-  { title: '今日入库', value: '328', icon: Download, color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', trend: '+8.2%', trendType: 'up' },
-  { title: '今日出库', value: '256', icon: Upload, color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', trend: '-3.1%', trendType: 'down' },
-  { title: '待处理订单', value: '42', icon: ShoppingCart, color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', trend: '+5.4%', trendType: 'up' }
+  { title: '总库存量', value: '12,846', icon: 'Box', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', trend: '+12.5%', trendType: 'up' },
+  { title: '今日入库', value: '328', icon: 'Download', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', trend: '+8.2%', trendType: 'up' },
+  { title: '今日出库', value: '256', icon: 'Upload', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', trend: '-3.1%', trendType: 'down' },
+  { title: '待处理订单', value: '42', icon: 'ShoppingCart', color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', trend: '+5.4%', trendType: 'up' }
 ])
 
 const chartData = ref([
@@ -146,10 +148,10 @@ const activities = ref([
 ])
 
 const quickActions = ref([
-  { label: '新建入库', icon: Plus, color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', path: '/home/inbound/list' },
-  { label: '新建出库', icon: Upload, color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', path: '/home/outbound/list' },
-  { label: '库存查询', icon: Search, color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', path: '/home/inventory/query' },
-  { label: '导出报表', icon: Download, color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', path: '/home/inventory/query' }
+  { label: '新建入库', icon: 'Plus', color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+  { label: '新建出库', icon: 'Upload', color: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+  { label: '库存查询', icon: 'Search', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+  { label: '导出报表', icon: 'Download', color: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
 ])
 
 const warehouses = ref([
@@ -165,17 +167,13 @@ function getProgressColor(usage) {
   return '#67c23a'
 }
 
-function handleAction(path) {
-  router.push(path)
-}
-
-async function fetchData() {
+async function fetchProfile() {
   loading.value = true
   try {
-    await authStore.fetchMenus()
+    await getProfile()
     ElMessage.success('数据已刷新')
   } catch (err) {
-    ElMessage.error('刷新失败')
+    ElMessage.error('刷新失败，请检查 Token')
   } finally {
     loading.value = false
   }
@@ -183,11 +181,6 @@ async function fetchData() {
 </script>
 
 <style scoped>
-.home-container {
-  padding: 0;
-}
-
-/* 欢迎区域 */
 .welcome-section {
   display: flex;
   justify-content: space-between;
@@ -208,7 +201,6 @@ async function fetchData() {
   margin: 0;
 }
 
-/* 统计卡片 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -225,7 +217,6 @@ async function fetchData() {
   gap: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
 }
 
 .stat-card:hover {
@@ -244,9 +235,7 @@ async function fetchData() {
   flex-shrink: 0;
 }
 
-.stat-info {
-  flex: 1;
-}
+.stat-info { flex: 1; }
 
 .stat-value {
   font-size: 28px;
@@ -269,15 +258,9 @@ async function fetchData() {
   margin-top: 6px;
 }
 
-.stat-trend.up {
-  color: #67c23a;
-}
+.stat-trend.up { color: #67c23a; }
+.stat-trend.down { color: #f56c6c; }
 
-.stat-trend.down {
-  color: #f56c6c;
-}
-
-/* 仪表盘网格 */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -306,7 +289,6 @@ async function fetchData() {
   margin: 0;
 }
 
-/* 图表 */
 .chart-placeholder {
   height: 200px;
   display: flex;
@@ -347,7 +329,6 @@ async function fetchData() {
   margin-top: 8px;
 }
 
-/* 活动列表 */
 .activity-list {
   display: flex;
   flex-direction: column;
@@ -368,9 +349,7 @@ async function fetchData() {
   flex-shrink: 0;
 }
 
-.activity-content {
-  flex: 1;
-}
+.activity-content { flex: 1; }
 
 .activity-text {
   font-size: 14px;
@@ -383,7 +362,6 @@ async function fetchData() {
   color: #bbb;
 }
 
-/* 快捷操作 */
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -423,7 +401,6 @@ async function fetchData() {
   font-weight: 500;
 }
 
-/* 仓库状态 */
 .warehouse-status {
   display: flex;
   flex-direction: column;
@@ -454,22 +431,13 @@ async function fetchData() {
   color: #333;
 }
 
-/* 响应式 */
 @media (max-width: 1200px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  .quick-actions {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .stats-grid { grid-template-columns: 1fr; }
+  .quick-actions { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

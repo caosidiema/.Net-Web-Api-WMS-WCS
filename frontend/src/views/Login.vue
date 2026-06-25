@@ -133,7 +133,7 @@ async function handleLogin() {
   try {
     await authStore.login(form)
     ElMessage.success('登录成功')
-    router.push('/home')
+    router.push('/home/index')
   } catch (err) {
     ElMessage.error(err.response?.data?.message || '登录失败')
   } finally {
