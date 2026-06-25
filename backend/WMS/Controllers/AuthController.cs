@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MiddlewareDemo.Auth;
+using MiddlewareDemo.Data;
 using MiddlewareDemo.Helper;
 using MiddlewareDemo.Models;
 
@@ -12,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly TokenHelper _tokenHelper;
     private readonly JwtSettings _jwtSettings;
+    private readonly AppDbContext _dbContext;
 
-    public AuthController(TokenHelper tokenHelper, IOptions<JwtSettings> jwtSettings)
+    public AuthController(TokenHelper tokenHelper, IOptions<JwtSettings> jwtSettings, AppDbContext dbContext)
     {
         _tokenHelper = tokenHelper;
         _jwtSettings = jwtSettings.Value;
+        _dbContext = dbContext;
     }
 
     /// <summary>
@@ -24,16 +28,18 @@ public class AuthController : ControllerBase
     /// POST /api/auth/login
     /// </summary>
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         Logger.Info($"登录请求: 用户名={request.UserName}");
 
-        // 简单验证（实际项目应查数据库）
-        // 测试账号: admin / 123456
-        if (request.UserName == "admin" && request.Password == "123456")
+        // 从数据库验证用户
+        var user = await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserName == request.UserName && u.Password == request.Password);
+
+        if (user != null)
         {
             // 生成 Token
-            var token = _tokenHelper.GenerateToken("1", request.UserName);
+            var token = _tokenHelper.GenerateToken(user.Id.ToString(), user.UserName);
 
             Logger.Info($"登录成功: {request.UserName}");
 
@@ -51,9 +57,8 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// 测试受保护的接口
+    /// 获取用户信息（需要 Token）
     /// GET /api/auth/profile
-    /// 需要携带 JWT Token 才能访问
     /// </summary>
     [HttpGet("profile")]
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -69,5 +74,39 @@ public class AuthController : ControllerBase
             userName,
             message = "你已通过认证，这是受保护的数据"
         });
+    }
+
+    /// <summary>
+    /// 获取动态菜单（需要 Token）
+    /// GET /api/auth/menus
+    /// </summary>
+    [HttpGet("menus")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> GetMenus()
+    {
+        // 从数据库查询所有菜单，按排序号排列
+        var allMenus = await _dbContext.Menus
+            .OrderBy(m => m.SortOrder)
+            .ToListAsync();
+
+        // 构建树形结构：找出顶级菜单，然后挂载子菜单
+        var topLevel = allMenus.Where(m => m.ParentId == null).ToList();
+        var result = topLevel.Select(parent => new MenuDto
+        {
+            Name = parent.Name,
+            Path = parent.Path,
+            Icon = parent.Icon,
+            Children = allMenus
+                .Where(m => m.ParentId == parent.Id)
+                .Select(child => new MenuDto
+                {
+                    Name = child.Name,
+                    Path = child.Path,
+                    Icon = child.Icon
+                })
+                .ToList()
+        }).ToList();
+
+        return Ok(result);
     }
 }

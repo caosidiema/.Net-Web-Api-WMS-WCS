@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiddlewareDemo.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MiddlewareDemo.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260624103801_AddMenuTable")]
+    partial class AddMenuTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,7 +76,7 @@ namespace MiddlewareDemo.Migrations
                             CreateTime = new DateTime(2026, 6, 24, 0, 0, 0, 0, DateTimeKind.Utc),
                             Icon = "Box",
                             Name = "库存管理",
-                            Path = "/home/inventory",
+                            Path = "/inventory",
                             SortOrder = 2
                         },
                         new
@@ -82,7 +85,7 @@ namespace MiddlewareDemo.Migrations
                             CreateTime = new DateTime(2026, 6, 24, 0, 0, 0, 0, DateTimeKind.Utc),
                             Icon = "ShoppingCart",
                             Name = "出入库管理",
-                            Path = "/home/flow",
+                            Path = "/flow",
                             SortOrder = 3
                         },
                         new
@@ -91,7 +94,7 @@ namespace MiddlewareDemo.Migrations
                             CreateTime = new DateTime(2026, 6, 24, 0, 0, 0, 0, DateTimeKind.Utc),
                             Icon = "Setting",
                             Name = "系统管理",
-                            Path = "/home/system",
+                            Path = "/system",
                             SortOrder = 4
                         },
                         new
@@ -101,7 +104,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Box",
                             Name = "库存查询",
                             ParentId = 2,
-                            Path = "/home/inventory/query",
+                            Path = "/inventory/query",
                             SortOrder = 1
                         },
                         new
@@ -111,7 +114,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Goods",
                             Name = "库存预警",
                             ParentId = 2,
-                            Path = "/home/inventory/warning",
+                            Path = "/inventory/warning",
                             SortOrder = 2
                         },
                         new
@@ -121,7 +124,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "List",
                             Name = "库存盘点",
                             ParentId = 2,
-                            Path = "/home/inventory/check",
+                            Path = "/inventory/check",
                             SortOrder = 3
                         },
                         new
@@ -131,7 +134,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Download",
                             Name = "入库管理",
                             ParentId = 3,
-                            Path = "/home/inbound/list",
+                            Path = "/inbound/list",
                             SortOrder = 1
                         },
                         new
@@ -141,7 +144,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Upload",
                             Name = "出库管理",
                             ParentId = 3,
-                            Path = "/home/outbound/list",
+                            Path = "/outbound/list",
                             SortOrder = 2
                         },
                         new
@@ -151,7 +154,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Location",
                             Name = "出入库记录",
                             ParentId = 3,
-                            Path = "/home/flow/record",
+                            Path = "/flow/record",
                             SortOrder = 3
                         },
                         new
@@ -161,7 +164,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "User",
                             Name = "用户管理",
                             ParentId = 4,
-                            Path = "/home/system/users",
+                            Path = "/system/users",
                             SortOrder = 1
                         },
                         new
@@ -171,7 +174,7 @@ namespace MiddlewareDemo.Migrations
                             Icon = "Avatar",
                             Name = "角色管理",
                             ParentId = 4,
-                            Path = "/home/system/roles",
+                            Path = "/system/roles",
                             SortOrder = 2
                         });
                 });
